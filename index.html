@@ -27,7 +27,16 @@
   color-scheme:dark;
 }
 [hidden]{display:none!important}
+#rot{display:none;position:fixed;inset:0;z-index:999;background:#0D1417;color:var(--fg);align-items:center;justify-content:center;flex-direction:column;gap:18px;text-align:center;padding:24px;font-family:var(--f-body)}
+#rot .ph{width:46px;height:78px;border:3px solid var(--accent);border-radius:9px;position:relative;animation:rotph 2.4s ease-in-out infinite}
+#rot .ph::after{content:"";position:absolute;left:50%;bottom:6px;width:14px;height:3px;margin-left:-7px;background:var(--accent);border-radius:2px}
+@keyframes rotph{0%,25%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
+#rot b{font-size:19px;letter-spacing:.06em}#rot span{font-size:13px;color:var(--muted);line-height:1.7}
+@media (orientation:portrait){body.playing #rot{display:flex}}
 html,body{height:100%}
+html,body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body.playing{touch-action:none}
+canvas,img,svg{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.6;-webkit-tap-highlight-color:transparent}
 #app{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:10px 28px;min-height:100%;display:flex;flex-direction:column;gap:14px;box-sizing:border-box}
 body.playing #app{max-width:none;height:100%;min-height:0;padding-block:6px;overflow:hidden}
@@ -68,16 +77,18 @@ h2{font-size:17px;margin:0;text-wrap:balance}
 .side{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;min-height:0}
 .view{position:relative;min-width:0;min-height:0;border-radius:14px;overflow:hidden;background:#0A0F12}
 .view canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.hudline{position:absolute;top:10px;left:14px;display:flex;gap:10px;font-family:var(--f-mono);font-size:12px;color:#fff;text-shadow:0 1px 3px #000;pointer-events:none}
-.toast{position:absolute;left:50%;top:40px;transform:translateX(-50%);background:rgba(13,20,23,.88);color:var(--ng);font-weight:700;padding:4px 14px;border-radius:999px;font-size:14px;pointer-events:none;white-space:nowrap}
+.hudline{display:none!important;position:absolute;top:10px;left:14px;display:flex;gap:10px;font-family:var(--f-mono);font-size:12px;color:#fff;text-shadow:0 1px 3px #000;pointer-events:none}
+.toast{position:absolute;left:50%;top:52px;transform:translateX(-50%);background:rgba(13,20,23,.88);color:var(--ng);font-weight:700;padding:4px 14px;border-radius:999px;font-size:14px;pointer-events:none;white-space:nowrap}
 .gauges{display:grid;grid-template-columns:repeat(2,auto);gap:4px 16px;font-family:var(--f-mono);font-size:10px;color:var(--muted);line-height:1.3;margin-bottom:12px}
 .gauges b{font-size:16px;font-weight:500;color:var(--fg);font-variant-numeric:tabular-nums}
 .quit{font-family:var(--f-body);font-size:12px;padding:4px 12px;border-radius:8px;background:none;border:1px solid var(--line);color:var(--muted);cursor:pointer;align-self:center}
-.callout{position:absolute;left:50%;top:22%;transform:translate(-50%,-50%);font-family:var(--f-disp);font-weight:700;font-size:clamp(26px,7vh,44px);color:var(--accent);text-shadow:0 2px 8px #000,0 0 2px #000;pointer-events:none;opacity:0;transition:opacity .15s;white-space:nowrap}
+.callout{position:absolute;left:50%;top:34%;transform:translate(-50%,-50%);font-family:var(--f-disp);font-weight:700;font-size:clamp(26px,7vh,44px);color:var(--accent);text-shadow:0 2px 8px #000,0 0 2px #000;pointer-events:none;opacity:0;transition:opacity .15s;white-space:nowrap}
 .callout.on{opacity:1}
-.coachbox{width:clamp(150px,22vw,230px);min-height:64px;margin-bottom:10px}
+.coachbox{display:none}
 .coach{background:rgba(12,17,20,.9);border:1px solid var(--line);border-left:3px solid var(--ng);border-radius:10px;padding:6px 10px;font-size:13px;line-height:1.45;color:var(--fg);pointer-events:none;opacity:0;transform:translateY(-4px);transition:opacity .2s,transform .2s}
-.quizmode .coach{position:absolute;left:12px;top:34px;max-width:min(62%,340px);z-index:2}
+.view .coach{position:absolute;left:50%;top:8px;width:max-content;max-width:min(78%,480px);text-align:center;z-index:2;transform:translate(-50%,-4px);padding:5px 14px;border-radius:999px;font-size:14px;line-height:1.4}
+.view .coach.on{transform:translate(-50%,0)}
+.view .coach b{display:inline;margin-right:8px}
 .coach.on{opacity:1;transform:none}
 .coach b{display:block;font-size:10px;letter-spacing:.12em;color:var(--ng);font-family:var(--f-disp)}
 .coach.praise{border-left-color:var(--ok)} .coach.praise b{color:var(--ok)}
@@ -146,6 +157,62 @@ h2{font-size:17px;margin:0;text-wrap:balance}
 .toggles input[type=checkbox]{accent-color:var(--accent);width:18px;height:18px}
 .toggles select{background:var(--panel-2);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-family:var(--f-body);min-width:0;flex:1}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---- home: compact, no scroll ---- */
+body.onhome #app{padding-block:8px 10px;gap:8px}
+#scr-home{gap:8px}
+#scr-home .hgrid{display:grid;grid-template-columns:1fr;gap:8px}
+#scr-home .card{padding:10px 12px;gap:6px}
+#scr-home h2{font-size:15px}
+#scr-home .card p{font-size:12px;line-height:1.45}
+#scr-home .eyebrow{font-size:10px}
+#scr-home .hl{font-size:12px;color:var(--muted)}
+#scr-home .lines{gap:6px}
+#scr-home .lines button{padding:6px 12px}
+#scr-home .coachsel{grid-template-columns:repeat(4,1fr);gap:5px}
+#scr-home .coachsel button{padding:7px 2px;font-size:11px}
+#scr-home .seg{gap:6px}
+#scr-home .lvbtn{padding:6px 3px 5px;gap:1px}
+#scr-home .lvbtn .n{font-size:15px}
+#scr-home .lvbtn .t{font-size:10.5px}
+#scr-home .hfoot{display:flex;align-items:center;gap:10px}
+#scr-home .hfoot .btn{padding:7px 12px;font-size:12px;white-space:nowrap}
+#scr-home .hfoot .note{font-size:10.5px;line-height:1.4}
+@media (orientation:landscape){
+  body.onhome #app{max-width:920px;padding-inline:12px}
+  body.onhome .top{margin-bottom:-2px}
+  #scr-home .hgrid{grid-template-columns:1fr 1fr 1fr;align-items:stretch}
+  #scr-home .seg:not(.three){grid-template-columns:repeat(2,1fr)}
+  #scr-home .coachsel{grid-template-columns:repeat(2,1fr)}
+}
+
+/* ---- home: tighter (landscape phones are ~300px tall in browsers) ---- */
+@media (orientation:landscape){
+  body.onhome #app{padding-block:4px 6px;gap:5px}
+  body.onhome .logo{font-size:15px}
+  body.onhome .chip{padding:2px 10px}
+  #scr-home{gap:5px}
+  #scr-home .hgrid{gap:6px}
+  #scr-home .card{padding:7px 10px;gap:4px}
+  #scr-home .card p{font-size:11px;line-height:1.35}
+  #scr-home h2{font-size:14px}
+  #scr-home .eyebrow{display:none}
+  #scr-home .lines{flex-wrap:nowrap;gap:4px;font-size:11px}
+  #scr-home .lines button{padding:5px 8px;font-size:12px}
+  #scr-home .coachsel{grid-template-columns:repeat(4,1fr);gap:4px}
+  #scr-home .coachsel button{padding:6px 0;font-size:10.5px;white-space:nowrap}
+  #scr-home .hl{font-size:11px}
+  #scr-home .lvbtn{padding:4px 2px 3px}
+  #scr-home .lvbtn .n{font-size:14px}
+  #scr-home .lvbtn .t{font-size:10px}
+  #scr-home .lvbtn .b{font-size:9px}
+  #scr-home .hfoot .btn{padding:5px 10px;font-size:11px}
+  #scr-home .hfoot .note{font-size:9.5px}
+}
+
+body.onhome{margin:0}
+#scr-home .lines button{white-space:nowrap}
+#scr-home .lines>span{white-space:nowrap}
 </style>
 
 <div id="app">
@@ -156,41 +223,31 @@ h2{font-size:17px;margin:0;text-wrap:balance}
 
   <!-- HOME -->
   <section class="screen" id="scr-home">
-    <div>
-      <div class="eyebrow">H125 nose mirror drill</div>
-      <h1>ミラーの向きを、<br>体で覚える。</h1>
-      <p class="lead">右席から機首前方の縦長ミラーを見て、吊り荷をターゲットに降ろす練習です。</p>
+    <div class="hgrid">
+      <div class="card hset">
+        <div class="eyebrow">Setup</div>
+        <div class="lines" id="lineSel"></div>
+        <div class="hl">教官モード</div>
+        <div class="coachsel" id="coachSel"></div>
+        <p id="coachDesc"></p>
+      </div>
+      <div class="card">
+        <div class="eyebrow">Mode 1</div>
+        <h2>スリング・プレースメント</h2>
+        <p>ミラーを見ながら荷をそっと降ろす</p>
+        <div class="seg three" id="placeLv"></div>
+      </div>
+      <div class="card">
+        <div class="eyebrow">Mode 2</div>
+        <h2>ミラー判読ドリル</h2>
+        <p>ミラーだけで方向を答える（10問）</p>
+        <div class="seg" id="quizLv"></div>
+      </div>
     </div>
-    <p class="tip">ゲーム中はスマホを横向きにしてください。左手でコレクティブ、右手でサイクリックを操作します。</p>
-
-    <div class="card">
-      <div class="lines" id="lineSel">吊り下げ長さ</div>
-      <p>長いほど、ミラーに映る荷が小さくなり難しくなります。</p>
+    <div class="hfoot">
+      <button class="btn" id="toSettings">操作・表示の設定</button>
+      <p class="note">横向きで遊びます。訓練の補助として作った試作版で、実機訓練や各社の規程に代わるものではありません。</p>
     </div>
-
-    <div class="card">
-      <div class="eyebrow">Instructor</div>
-      <h2>教官モード</h2>
-      <div class="coachsel" id="coachSel"></div>
-      <p id="coachDesc"></p>
-    </div>
-
-    <div class="card">
-      <div class="eyebrow">Mode 1</div>
-      <h2>スリング・プレースメント</h2>
-      <p>最初はターゲットが前方の景色にだけ見えています。近づくとミラーに入ってくるので、ミラーを見ながら荷をそっと降ろします。</p>
-      <div class="seg three" id="placeLv"></div>
-    </div>
-
-    <div class="card">
-      <div class="eyebrow">Mode 2</div>
-      <h2>ミラー判読ドリル</h2>
-      <p>ミラーだけを見て、荷をターゲットに置くための移動方向を答えます。1ラウンド10問。</p>
-      <div class="seg" id="quizLv"></div>
-    </div>
-
-    <button class="btn" id="toSettings">操作・表示の設定</button>
-    <p class="note">訓練の補助として作った試作版です。実機での訓練や各社の規程に代わるものではありません。</p>
   </section>
 
   <!-- GAME (shared by both modes) -->
@@ -249,13 +306,15 @@ h2{font-size:17px;margin:0;text-wrap:balance}
         <label>コレクティブ <select id="tCol"><option value="down">下に引くとUP（手描き案）</option><option value="up">上に押すとUP</option></select></label>
         <label>ミラーの大きさ <select id="tSize"><option value="l">大きく</option><option value="m">実寸に近く</option></select></label>
         <label><input type="checkbox" id="tCv"> 凸面ミラーの歪みを付ける</label>
-        <label><input type="checkbox" id="tVo"> 荷の高さを音声でカウント（10m・5m・3m・2m・まもなく）</label>
+        <label><input type="checkbox" id="tVo"> 音声を使う（高さのカウント・教官のセリフ）</label>
+        <label style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button type="button" class="chip" id="tTest">声のテスト</button><span id="tVName" style="font-size:12px;color:var(--muted)"></span></label>
       </div>
     </div>
     <button class="btn primary" data-home>メニューに戻る</button>
   </section>
 </div>
 
+<div id="rot"><div class="ph"></div><b>スマホを横向きにしてください</b><span>向きが変わらないときは「画面の向きのロック」をオフにしてください。<br>(iPhone: コントロールセンター / Android: クイック設定)</span></div>
 <script>
 (function(){
 const $=s=>document.querySelector(s);
@@ -368,7 +427,8 @@ function init3D(){
   const belly=new THREE.Mesh(new THREE.BoxGeometry(1.6,.7,4.4),new THREE.MeshLambertMaterial({color:0xF2F4F5}));belly.position.set(0,.4,.2);belly.layers.set(1);heli.add(belly);
   const hook=new THREE.Mesh(new THREE.BoxGeometry(.18,.25,.3),new THREE.MeshLambertMaterial({color:0x333A3F}));hook.position.set(0,-.1,0);hook.layers.set(1);heli.add(hook);
   // sling + load (cargo net)
-  const lineM=new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,1,6),new THREE.MeshLambertMaterial({color:0x222222}));lineM.geometry.translate(0,.5,0);scene.add(lineM);
+  const lineM=new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,1,6),new THREE.MeshLambertMaterial({color:0x222222}));lineM.geometry.translate(0,.5,0);lineM.visible=false;scene.add(lineM);
+  const RN=16,rope=[];for(let i=0;i<RN;i++){const m=new THREE.Mesh(lineM.geometry,lineM.material);scene.add(m);rope.push(m)}
   const nc=document.createElement('canvas');nc.width=nc.height=128;const nx=nc.getContext('2d');
   nx.fillStyle='#7A5A36';nx.fillRect(0,0,128,128);nx.strokeStyle='#E8D9A8';nx.lineWidth=3;
   for(let i=-128;i<256;i+=22){nx.beginPath();nx.moveTo(i,0);nx.lineTo(i+128,128);nx.stroke();nx.beginPath();nx.moveTo(i,128);nx.lineTo(i+128,0);nx.stroke()}
@@ -398,7 +458,7 @@ function init3D(){
         gl_FragColor=vec4(c,clamp(0.5-sd,0.0,1.0));
       }`});
   const quad=new THREE.Mesh(new THREE.PlaneGeometry(1,1),mat);ovScene.add(quad);
-  G={renderer,scene,heli,lineM,load,loadSh,heliSh,main,mirror,rt,ovScene,ovCam,quad,mat,W:0,H:0,mr:null};
+  G={renderer,scene,heli,lineM,rope,load,loadSh,heliSh,main,mirror,rt,ovScene,ovCam,quad,mat,W:0,H:0,mr:null};
   return G;
 }
 const V3=(x,y,z)=>new THREE.Vector3(x,y,z);
@@ -414,7 +474,20 @@ function poseWorld(st){
   G.load.position.copy(lp);
   const top=lp.clone();top.y+=.8;const hk=V3(hx,hy-.2,hz);
   const dir=top.clone().sub(hk);const len=dir.length();
-  G.lineM.position.copy(hk);G.lineM.scale.set(1,len,1);G.lineM.quaternion.setFromUnitVectors(V3(0,1,0),dir.normalize());
+  // スリングロープ：荷が着地してフックがさらに下がると、余った分だけたるませる
+  // 置いた直後から約1.4秒かけて、さらに0.8 mぶんロープがゆるむ（フックを下げなくても緩む）
+  if(st.grounded){if(G.gAt==null)G.gAt=performance.now()}else G.gAt=null;
+  const gk=st.grounded?Math.min(1,(performance.now()-G.gAt)/1400):0,ease=1-(1-gk)*(1-gk);
+  const slack=st.grounded?Math.max(0,(S.line-1)-len)+0.8*ease:0;
+  const amp=slack>.04?Math.min(1.65,Math.sqrt(3*slack*len/8)):0;
+  const ax_=dir.clone().normalize(),side=V3(1,0,.35).normalize();
+  side.sub(ax_.clone().multiplyScalar(side.dot(ax_)));if(side.lengthSq()<1e-4)side.set(0,0,1);side.normalize();
+  const RN=G.rope.length;let pPrev=hk.clone();
+  for(let i=1;i<=RN;i++){
+    const t=i/RN,b=Math.sin(PI*t)*amp*(1+.35*Math.sin(2*PI*t)),pt=hk.clone().addScaledVector(dir,t).addScaledVector(side,b);
+    const seg=G.rope[i-1],dv=pt.clone().sub(pPrev),dl=Math.max(.001,dv.length());
+    seg.position.copy(pPrev);seg.scale.set(1,dl,1);seg.quaternion.setFromUnitVectors(V3(0,1,0),dv.normalize());pPrev=pt;
+  }
   const lh=Math.max(0,st.ly-.8);
   G.loadSh.position.set(lp.x,.08,lp.z);const ls=1.1+lh*.02;G.loadSh.scale.set(ls,ls,1);G.loadSh.material.opacity=Math.max(.1,.38-lh*.008);
   G.heliSh.position.set(hx,.07,hz+.3);G.heliSh.scale.set(1.6,3.8,1);G.heliSh.material.opacity=Math.max(.06,.25-hy*.004);
@@ -609,13 +682,24 @@ function show(name){
   current=name;
   for(const s of document.querySelectorAll('.screen'))s.hidden=s.id!=='scr-'+name;
   document.body.classList.toggle('playing',name==='game');
+  document.body.classList.toggle('onhome',name==='home');
+  try{
+    if(name==='game'){
+      const root=document.documentElement;
+      if(!document.fullscreenElement&&root.requestFullscreen&&!(matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches))root.requestFullscreen().then(()=>screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape')).catch(()=>{});
+      else if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{});
+    }else{
+      if(screen.orientation&&screen.orientation.unlock)screen.orientation.unlock();
+      if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});
+    }
+  }catch(e){}
   if(name==='home')renderHome();
   if(name==='settings')renderSettings();
   window.scrollTo(0,0);
 }
 function enterGame(m){
-  mode=m;
-  const cb=$('#coach');(m==='quiz'?$('#view'):$('#coachBox')).appendChild(cb);
+  mode=m;clearTimeout(coachDT);
+  const cb=$('#coach');$('#view').appendChild(cb);
   $('#leftPlace').hidden=m!=='place';$('#rightPlace').hidden=m!=='place';
   $('#leftQuiz').hidden=m!=='quiz';$('#rightQuiz').hidden=m!=='quiz';
   $('#scr-game').classList.toggle('quizmode',m==='quiz');
@@ -635,7 +719,7 @@ const PLV={
   3:{name:'振れ＋風',labels:false,swing:true,wind:1.1}
 };
 function renderHome(){
-  const ls=$('#lineSel');ls.innerHTML='吊り下げ長さ';
+  const ls=$('#lineSel');ls.innerHTML='<span>吊り長さ</span>';
   for(const L of[10,20,30]){const b=document.createElement('button');b.textContent=L+' m';b.setAttribute('aria-pressed',String(S.line===L));b.onclick=()=>{S.line=L;saveCfg();renderHome()};ls.appendChild(b)}
   const cs=$('#coachSel');cs.innerHTML='';
   for(const k of['off','s','ss','hell']){const b=document.createElement('button');b.textContent=COACH[k].name;b.setAttribute('aria-pressed',String(S.coach===k));b.onclick=()=>{S.coach=k;saveCfg();renderHome()};cs.appendChild(b)}
@@ -812,29 +896,84 @@ const LINES={
   inMirror:['やっと荷下ろし場まで来たぞ、遅せぇよ'],
   reverse:['逆、逆、逆、逆！！！','その判断力でよく免許が取れたな','お前さぁ、何見てんの？','普段何見て飛んでんの？'],
   fastDesc:['速いわ！東京スカイツリーのエレベーターか？','お前が降りてどうする、荷を降ろせ','あー、あー、あーっ'],
-  swing:['荷の方がお前より落ち着いてるぞ','はい、ブランコ職人','木下大サーカスの空中ブランコばりだな','あー、あー、あーっ'],
+  swing:['お前のせいでみんな待たされてんだけど？','作業員撤収しちまうぞ','逆にどうやったらこんな揺れんの？','今日風とかないからね？','はい、ブランコ職人','木下大サーカスの空中ブランコばりだな','あー、あー、あーっ'],
   drift:['離れてんだけど？わざとやってんの？','迷子か？','お前さぁ、何見てんの？'],
-  slow:['遅い。亀の方がまだ決断力がある','ホバリングの記念撮影でもしてるのか','頑張ってるフリやめてもらえる？','燃料もったいねぇよ、地球温暖化の原因、お前じゃね？','お前、効率って知ってる？こ、う、り、つ'],
+  slow:['遅い。亀の方がまだ決断力がある','ホバリングの記念撮影でもしてるのか','頑張ってるフリやめてもらえる？','おそっ、戦場カメラマン思い出すわ','トイレ行きてぇ','日没後も作業すんの？','燃料もったいねぇよ、地球温暖化の原因、お前じゃね？','お前、効率って知ってる？こ、う、り、つ'],
   good:['……珍しいこともあるもんだ'],
-  hard:['空港で離着陸の訓練してきて','あー、あー、あーっ'],
+  hard:['空港で離着陸の訓練してきて','あー、あー、あーっ','作業員撤収しちまうぞ'],
   outside:['どこ置くんだよ？79条、日本全部で出しとけよ','その目は飾りか','新人、基礎からやり直した方がいいんじゃない？','空港で離着陸の訓練してきて'],
   success:['たまたまだろ。もう一回やってみろ','置けた？今日の運を使い果たしたな'],
   successMeh:['置いたというより、落ちただけだ','空港で離着陸の訓練してきて'],
   qok:['まぐれだな','……で？'],qfast:['速けりゃいいってもんじゃない。まあ合ってるが'],qng:['違う。お前の頭の中にもミラーが付いてるのか','小学生でも分かるぞ','お前さぁ、何見てんの？','普段何見て飛んでんの？','新人、基礎からやり直した方がいいんじゃない？'],qtime:['考えてる振りはやめろ','頑張ってるフリやめてもらえる？'],
   qend:['センスがないなら数をこなせ','見ていて胃が痛くなった','新人、基礎からやり直した方がいいんじゃない？']}
 };
-let coachT=null,coachLast=-99;
+let coachT=null,coachDT=null,coachLast=-99,JV=null;const COACH_DELAY=1100;
+function pickVoice(){
+  try{
+    const vs=(speechSynthesis.getVoices()||[]).filter(v=>/^ja/i.test(v.lang.replace('_','-')));
+    if(!vs.length){JV=null;return}
+    const female=/kyoko|o-?ren|haruka|sayaka|mizuki|nanami|female|女|ayumi|shiori|fiona/i;
+    const male=/otoya|ichiro|hattori|takeru|keita|male|男|yuuma|ja-jp-x-j[ac][bcd]?-/i;
+    JV=vs.find(v=>male.test(v.name)&&!female.test(v.name))||vs.find(v=>!female.test(v.name)&&!/google/i.test(v.name))||vs[0];
+  }catch(e){JV=null}
+}
+try{if(window.speechSynthesis){pickVoice();speechSynthesis.addEventListener('voiceschanged',pickVoice)}}catch(e){}
+let spAt=0,spKind='',spUnlocked=false;
+function speakRaw(txt,rate,vol){
+  const u=new SpeechSynthesisUtterance(txt);u.lang='ja-JP';if(JV)u.voice=JV;u.rate=rate;u.pitch=.5;u.volume=vol==null?1:vol;
+  u.onend=u.onerror=()=>{spKind=''};
+  speechSynthesis.speak(u);
+}
+// kind: 'callout'（高さのカウント・最優先）/ 'coach'（教官）
+function speak(txt,rate,kind){
+  if(!S.voice||!window.speechSynthesis)return;
+  try{
+    const now=performance.now();
+    if(kind==='coach'&&spKind==='callout'&&now-spAt<1500)return;   // カウント中は教官を重ねない
+    speechSynthesis.resume();
+    let wait=0;
+    if(speechSynthesis.speaking||speechSynthesis.pending){speechSynthesis.cancel();wait=80}
+    spAt=now;spKind=kind;
+    setTimeout(()=>{try{speechSynthesis.resume();speakRaw(txt,rate)}catch(e){}},wait);
+  }catch(e){}
+}
+// iPhone等は「画面タッチの中で一度しゃべらせる」まで音が出ないため、最初のタッチで準備しておく
+function unlockSpeech(){
+  if(spUnlocked||!window.speechSynthesis)return;spUnlocked=true;
+  try{speechSynthesis.resume();speakRaw(' ',1,0)}catch(e){}
+}
+['pointerdown','touchstart','click'].forEach(ev=>document.addEventListener(ev,unlockSpeech,{passive:true}));
+// 音声が止まったまま固まる不具合の対策（一定時間しゃべり続けていたら解除）
+setInterval(()=>{try{if(window.speechSynthesis&&speechSynthesis.speaking&&performance.now()-spAt>9000){speechSynthesis.cancel();spKind=''}}catch(e){}},2000);
+document.addEventListener('contextmenu',e=>e.preventDefault());
+const KEYS=[/基礎/,/空港/,/何見て/,/あー/,/作業員/,/ブランコ|サーカス/,/効率|燃料|温暖化/,/逆/,/遅|おそ|亀|待たされ/,/ミラー/,/免許/,/ターゲット|荷下ろし場|どこ置く/,/落ち着|揺れ|風/,/速い|速/];
+const keyOf=t=>{const k=new Set();KEYS.forEach((r,i)=>{if(r.test(t))k.add(i)});return k};
+let said=[];
+function pickLine(L){
+  if(L.length<2){const t=L[0];said.push(t);said=said.slice(-8);return t}
+  const last2=new Set();said.slice(-2).forEach(t=>keyOf(t).forEach(i=>last2.add(i)));
+  const ok=(t,n,useKey)=>!said.slice(-n).includes(t)&&(!useKey||![...keyOf(t)].some(i=>last2.has(i)));
+  let c=L.filter(t=>ok(t,6,true));
+  if(!c.length)c=L.filter(t=>ok(t,4,false));
+  if(!c.length)c=L.filter(t=>ok(t,1,false));
+  if(!c.length)c=L;
+  const t=c[(Math.random()*c.length)|0];said.push(t);said=said.slice(-8);return t;
+}
 function coach(ev,force){
   const m=S.coach;if(m==='off')return;
   const L=LINES[m][ev];if(!L)return;
   const now=performance.now()/1000;if(!force&&now-coachLast<COACH[m].cd)return;coachLast=now;
-  const txt=L[(Math.random()*L.length)|0],praise=['good','success','qok','qfast'].includes(ev)&&m==='s';
-  const el=$('#coach');$('#coachName').textContent='教官（'+COACH[m].name+'）';$('#coachTxt').textContent=txt;
-  el.classList.toggle('praise',praise);el.classList.add('on');clearTimeout(coachT);coachT=setTimeout(()=>el.classList.remove('on'),2800);
-  if(S.voice&&window.speechSynthesis&&!speechSynthesis.speaking){try{const u=new SpeechSynthesisUtterance(txt);u.lang='ja-JP';u.rate=1.15;u.pitch=.8;speechSynthesis.speak(u)}catch(e){}}
+  const txt=pickLine(L),praise=['good','success','qok','qfast'].includes(ev)&&m==='s';
+  const el=$('#coach'),nm='教官（'+COACH[m].name+'）';
+  clearTimeout(coachDT);
+  coachDT=setTimeout(()=>{  // 少し間をおいてから言う
+    $('#coachName').textContent=nm;$('#coachTxt').textContent=txt;
+    el.classList.toggle('praise',praise);el.classList.add('on');clearTimeout(coachT);coachT=setTimeout(()=>el.classList.remove('on'),3200);
+    speak(txt,1.05,'coach');
+  },COACH_DELAY);
   return txt;
 }
-function coachLine(ev){const m=S.coach;if(m==='off')return null;const L=LINES[m][ev];return L?L[(Math.random()*L.length)|0]:null}
+function coachLine(ev){const m=S.coach;if(m==='off')return null;const L=LINES[m][ev];return L?pickLine(L):null}
 function coachWatch(dt,u,dist,lb){
   const m=S.coach;if(m==='off'||P.grounded)return;const k=COACH[m].k,W=P.cw||(P.cw={});
   if(!W.start&&P.t>1){W.start=1;coach('start',true);return}
@@ -850,7 +989,7 @@ const CALLS=[[10,'10 m','10メートル'],[5,'5 m','5メートル'],[3,'3 m','3'
 let calloutT=null;
 function callout(txt,say){
   const el=$('#callout');el.textContent=txt;el.classList.add('on');clearTimeout(calloutT);calloutT=setTimeout(()=>el.classList.remove('on'),900);
-  if(S.voice&&window.speechSynthesis){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(say);u.lang='ja-JP';u.rate=1.25;speechSynthesis.speak(u)}catch(e){}}
+  speak(say,1.15,'callout');
 }
 function toast(msg){P.toastT=2.4;const t=$('#toast');t.textContent=msg;t.hidden=false}
 function stepPlace(dt){
@@ -943,8 +1082,10 @@ function drawTrail(tr,T){
 }
 
 // ---------- settings ----------
-function renderSettings(){$('#tCol').value=S.col;$('#tSize').value=S.size;$('#tCv').checked=S.convex;$('#tVo').checked=S.voice}
+function renderSettings(){
+  pickVoice();$('#tVName').textContent=window.speechSynthesis?(JV?'使用する声: '+JV.name:'日本語の声が見つかりません（端末の標準の声を使います）'):'この端末は音声読み上げに対応していません';$('#tCol').value=S.col;$('#tSize').value=S.size;$('#tCv').checked=S.convex;$('#tVo').checked=S.voice}
 const onT=()=>{S.col=$('#tCol').value;S.size=$('#tSize').value;S.convex=$('#tCv').checked;S.voice=$('#tVo').checked;saveCfg()};
+$('#tTest').onclick=()=>{unlockSpeech();const was=S.voice;S.voice=true;speak('そろそろまともに置いてくれよ？',1.05,'coach');S.voice=was};
 ['#tCol','#tSize','#tCv','#tVo'].forEach(s=>$(s).addEventListener('change',onT));
 
 // ---------- nav ----------
@@ -956,6 +1097,10 @@ window.addEventListener('resize',()=>{if(current==='game'&&mode==='place')setCol
 // ---------- loop ----------
 let last=performance.now();
 function loop(now){
+  if(current==='game'&&innerHeight>innerWidth){ // 縦向きの間は一時停止
+    if(typeof Q!=='undefined'&&Q&&Q.t0)Q.t0+=now-last;
+    last=now;requestAnimationFrame(loop);return;
+  }
   const dt=Math.min(.05,(now-last)/1000);last=now;
   if(current==='game'&&G){
     if(mode==='quiz'&&Q){
