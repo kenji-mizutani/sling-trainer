@@ -227,6 +227,7 @@ body.onhome{margin:0}
       <div class="card hset">
         <div class="eyebrow">Setup</div>
         <div class="lines" id="lineSel"></div>
+        <div class="lines" id="cargoSel"></div>
         <div class="hl">教官モード</div>
         <div class="coachsel" id="coachSel"></div>
         <p id="coachDesc"></p>
@@ -234,7 +235,7 @@ body.onhome{margin:0}
       <div class="card">
         <div class="eyebrow">Mode 1</div>
         <h2>スリング・プレースメント</h2>
-        <p>ミラーを見ながら荷をそっと降ろす</p>
+        <p>ミラーを見ながら荷をそっと降ろす（生コンは受けホッパーの上で打設）</p>
         <div class="seg three" id="placeLv"></div>
       </div>
       <div class="card">
@@ -323,7 +324,7 @@ const store={
   get(k,d){try{const v=localStorage.getItem('sling_'+k);return v?JSON.parse(v):d}catch(e){return d}},
   set(k,v){try{localStorage.setItem('sling_'+k,JSON.stringify(v))}catch(e){}}
 };
-let S=Object.assign({line:10,col:'down',size:'l',convex:true,voice:true,coach:'s'},store.get('cfg3',{}));
+let S=Object.assign({line:10,col:'down',size:'l',convex:true,voice:true,coach:'s',cargo:'net'},store.get('cfg3',{}));
 let best=store.get('best3',{});
 const DIRS=['前','右前','右','右後','後','左後','左','左前'];
 const dirVec=i=>{const a=i*PI/4;return{x:Math.sin(a),y:Math.cos(a)}};
@@ -366,7 +367,16 @@ function init3D(){
   const tgt=new THREE.Group();scene.add(tgt);
   const clr=new THREE.Mesh(new THREE.CircleGeometry(15,48),new THREE.MeshLambertMaterial({color:0x8D7D5A}));clr.rotation.x=-PI/2;clr.position.y=.03;tgt.add(clr);
   const ring=new THREE.Mesh(new THREE.RingGeometry(2.1,2.6,48),new THREE.MeshLambertMaterial({color:0xFFFFFF}));ring.rotation.x=-PI/2;ring.position.y=.05;tgt.add(ring);
-  for(const a of[PI/4,-PI/4]){const b=new THREE.Mesh(new THREE.PlaneGeometry(3.4,.6),new THREE.MeshLambertMaterial({color:0xFF7A1A}));b.rotation.x=-PI/2;b.rotation.z=a;b.position.y=.06;tgt.add(b)}
+  const tgtMarks=[ring];
+  for(const a of[PI/4,-PI/4]){const b=new THREE.Mesh(new THREE.PlaneGeometry(3.4,.6),new THREE.MeshLambertMaterial({color:0xFF7A1A}));b.rotation.x=-PI/2;b.rotation.z=a;b.position.y=.06;tgt.add(b);tgtMarks.push(b)}
+  // 生コン用：足場の上の受けホッパー（開口の高さ 2.5 m）
+  const hop=new THREE.Group();hop.visible=false;tgt.add(hop);
+  {const HM=c=>new THREE.MeshLambertMaterial({color:c});
+   const pf=new THREE.Mesh(new THREE.BoxGeometry(3.2,1.4,3.2),HM(0x6B7078));pf.position.y=.7;hop.add(pf);
+   for(const [x,z] of[[-1.5,-1.5],[1.5,-1.5],[-1.5,1.5],[1.5,1.5]]){const lg=new THREE.Mesh(new THREE.BoxGeometry(.15,1.4,.15),HM(0xC9CDD2));lg.position.set(x,.7,z);hop.add(lg)}
+   const hb=new THREE.Mesh(new THREE.CylinderGeometry(1.7,.6,1.1,4,1),HM(0xE8B820));hb.rotation.y=PI/4;hb.position.y=1.95;hop.add(hb);
+   const op=new THREE.Mesh(new THREE.PlaneGeometry(2.4,2.4),HM(0x2A2A2A));op.rotation.x=-PI/2;op.position.y=2.51;hop.add(op);
+   const rl=new THREE.Mesh(new THREE.BoxGeometry(3.2,.9,.12),HM(0xB8BCC2));rl.position.set(0,1.85,-1.75);hop.add(rl);}
   // scale cues: ground crew and material piles
   const person=(x,z,ry,signal,vest)=>{
     const g=new THREE.Group(),M=c=>new THREE.MeshLambertMaterial({color:c});
@@ -432,8 +442,18 @@ function init3D(){
   const nc=document.createElement('canvas');nc.width=nc.height=128;const nx=nc.getContext('2d');
   nx.fillStyle='#7A5A36';nx.fillRect(0,0,128,128);nx.strokeStyle='#E8D9A8';nx.lineWidth=3;
   for(let i=-128;i<256;i+=22){nx.beginPath();nx.moveTo(i,0);nx.lineTo(i+128,128);nx.stroke();nx.beginPath();nx.moveTo(i,128);nx.lineTo(i+128,0);nx.stroke()}
-  const load=new THREE.Mesh(new THREE.SphereGeometry(.85,16,12),new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(nc)}));
-  load.scale.set(1.15,.95,1.15);scene.add(load);
+  const load=new THREE.Group();scene.add(load);
+  const sph=new THREE.Mesh(new THREE.SphereGeometry(.85,16,12),new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(nc)}));sph.scale.set(1.15,.95,1.15);load.add(sph);
+  const boxM=new THREE.Group();{const LM=c=>new THREE.MeshLambertMaterial({color:c});
+    const bx=new THREE.Mesh(new THREE.BoxGeometry(1.5,1.4,1.5),LM(0x3E6FB0));boxM.add(bx);
+    const st1=new THREE.Mesh(new THREE.BoxGeometry(1.52,.2,1.52),LM(0xE6ECEE));st1.position.y=.1;boxM.add(st1);}
+  load.add(boxM);
+  const bucket=new THREE.Group();{const LM=c=>new THREE.MeshLambertMaterial({color:c});
+    const bd=new THREE.Mesh(new THREE.CylinderGeometry(.75,.45,1.1,12),LM(0xE8B820));bd.position.y=.15;bucket.add(bd);
+    const ch=new THREE.Mesh(new THREE.CylinderGeometry(.45,.22,.4,12),LM(0x8A6A10));ch.position.y=-.6;bucket.add(ch);
+    const cap=new THREE.Mesh(new THREE.CylinderGeometry(.2,.75,.2,12),LM(0xC99A14));cap.position.y=.8;bucket.add(cap);}
+  load.add(bucket);
+  const stream=new THREE.Mesh(new THREE.CylinderGeometry(.14,.14,1,8),new THREE.MeshLambertMaterial({color:0x9A9A94}));stream.geometry.translate(0,.5,0);stream.visible=false;scene.add(stream);
   const blob=(op)=>{const m=new THREE.Mesh(new THREE.CircleGeometry(1,24),new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:op,depthWrite:false}));m.rotation.x=-PI/2;m.position.y=.08;scene.add(m);return m};
   const loadSh=blob(.35),heliSh=blob(.22);
   // cameras
@@ -458,12 +478,14 @@ function init3D(){
         gl_FragColor=vec4(c,clamp(0.5-sd,0.0,1.0));
       }`});
   const quad=new THREE.Mesh(new THREE.PlaneGeometry(1,1),mat);ovScene.add(quad);
-  G={renderer,scene,heli,lineM,rope,load,loadSh,heliSh,main,mirror,rt,ovScene,ovCam,quad,mat,W:0,H:0,mr:null};
+  G={renderer,scene,heli,lineM,rope,load,loadParts:{net:sph,box:boxM,conc:bucket},stream,hop,tgtMarks,cargoNow:null,loadSh,heliSh,main,mirror,rt,ovScene,ovCam,quad,mat,W:0,H:0,mr:null};
   return G;
 }
 const V3=(x,y,z)=>new THREE.Vector3(x,y,z);
 /* st: H = hook (aircraft frame x,y), h = hook height AGL, L = load centre (aircraft frame), ly = load centre height */
+function setCargo(k){G.cargoNow=k;for(const n in G.loadParts)G.loadParts[n].visible=(n===k);G.hop.visible=k==='conc';G.tgtMarks.forEach(m=>m.visible=k!=='conc')}
 function poseWorld(st){
+  const want=st.cargo||'net';if(G.cargoNow!==want)setCargo(want);
   const hx=st.H.x,hz=-st.H.y,hy=st.h;
   G.heli.position.set(hx,hy,hz);
   G.main.position.set(hx+EYE.x,hy+EYE.y,hz+EYE.z);
@@ -488,6 +510,7 @@ function poseWorld(st){
     const seg=G.rope[i-1],dv=pt.clone().sub(pPrev),dl=Math.max(.001,dv.length());
     seg.position.copy(pPrev);seg.scale.set(1,dl,1);seg.quaternion.setFromUnitVectors(V3(0,1,0),dv.normalize());pPrev=pt;
   }
+  if(st.pour){const y0=2.2,len=Math.max(.05,lp.y-.8-y0);G.stream.visible=true;G.stream.position.set(lp.x,y0,lp.z);G.stream.scale.set(1,len,1)}else G.stream.visible=false;
   const lh=Math.max(0,st.ly-.8);
   G.loadSh.position.set(lp.x,.08,lp.z);const ls=1.1+lh*.02;G.loadSh.scale.set(ls,ls,1);G.loadSh.material.opacity=Math.max(.1,.38-lh*.008);
   G.heliSh.position.set(hx,.07,hz+.3);G.heliSh.scale.set(1.6,3.8,1);G.heliSh.material.opacity=Math.max(.06,.25-hy*.004);
@@ -618,7 +641,7 @@ function drawCockpit(st,opt){
     ctx.fillStyle='#16191C';rrect(ctx,hx-hw/2,hy-hh/2,hw,hh,6);ctx.fill();
     ctx.fillStyle='#9FB39A';rrect(ctx,hx-hw*.38,hy-hh*.3,hw*.76,hh*.46,3);ctx.fill();
     ctx.fillStyle='#1E2A1C';ctx.font=`500 ${Math.round(hh*.34)}px "IBM Plex Mono",monospace`;ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(st.grounded?'000':'085',hx,hy-hh*.07);
+    ctx.fillText(st.grounded?'000':(st.hl||'085'),hx,hy-hh*.07);
     ctx.fillStyle='#8FA3AD';ctx.font=`700 ${Math.max(7,Math.round(hh*.16))}px sans-serif`;ctx.fillText('HOOK LOAD ×10',hx,hy+hh*.34);
   };
   // mirror-only mode (drill): dim everything but the mirror
@@ -713,6 +736,7 @@ const QLV={
   3:{name:'ラベルなし',n4:false,labels:false,limit:5,flash:0,jit:12,swing:false},
   4:{name:'瞬間判読',n4:false,labels:false,limit:4,flash:1.2,jit:12,swing:true}
 };
+const CARGO={net:{name:'資材ネット',short:'資材'},box:{name:'コンテナ',short:'コンテナ'},conc:{name:'生コン打設',short:'生コン'}};
 const PLV={
   1:{name:'ラベルあり',labels:true,swing:false,wind:0},
   2:{name:'荷の振れ',labels:false,swing:true,wind:0},
@@ -720,7 +744,9 @@ const PLV={
 };
 function renderHome(){
   const ls=$('#lineSel');ls.innerHTML='<span>吊り長さ</span>';
-  for(const L of[10,20,30]){const b=document.createElement('button');b.textContent=L+' m';b.setAttribute('aria-pressed',String(S.line===L));b.onclick=()=>{S.line=L;saveCfg();renderHome()};ls.appendChild(b)}
+  for(const L of[10,20,30,100]){const b=document.createElement('button');b.textContent=L+' m';if(L===100)b.title='遊び用の超長吊り';b.setAttribute('aria-pressed',String(S.line===L));b.onclick=()=>{S.line=L;saveCfg();renderHome()};ls.appendChild(b)}
+  const cg=$('#cargoSel');cg.innerHTML='<span>荷の種類</span>';
+  for(const k of['net','box','conc']){const b=document.createElement('button');b.textContent=CARGO[k].short;b.setAttribute('aria-pressed',String(S.cargo===k));b.onclick=()=>{S.cargo=k;saveCfg();renderHome()};cg.appendChild(b)}
   const cs=$('#coachSel');cs.innerHTML='';
   for(const k of['off','s','ss','hell']){const b=document.createElement('button');b.textContent=COACH[k].name;b.setAttribute('aria-pressed',String(S.coach===k));b.onclick=()=>{S.coach=k;saveCfg();renderHome()};cs.appendChild(b)}
   $('#coachDesc').textContent=COACH[S.coach].desc;
@@ -728,7 +754,7 @@ function renderHome(){
   for(const lv of[1,2,3,4]){const b=document.createElement('button');b.className='lvbtn';const bs=best['q'+lv+'_'+S.line];
     b.innerHTML=`<span class="n">LV${lv}</span><span class="t">${QLV[lv].name}</span><span class="b">${bs!=null?'BEST '+bs:'—'}</span>`;b.onclick=()=>startQuiz(lv);q.appendChild(b)}
   const p=$('#placeLv');p.innerHTML='';
-  for(const lv of[1,2,3]){const b=document.createElement('button');b.className='lvbtn';const bs=best['p'+lv+'_'+S.line];
+  for(const lv of[1,2,3]){const b=document.createElement('button');b.className='lvbtn';const bs=best['p'+lv+'_'+S.line+(S.cargo==='conc'?'_conc':'')];
     b.innerHTML=`<span class="n">LV${lv}</span><span class="t">${PLV[lv].name}</span><span class="b">${bs!=null?'BEST '+bs.toFixed(1)+'s':'—'}</span>`;b.onclick=()=>startPlace(lv);p.appendChild(b)}
 }
 
@@ -851,6 +877,7 @@ function startPlace(lv){
   P={lv,c,L,LE:L+.8,H:{x:-Math.sin(brg)*dist,y:-Math.cos(brg)*dist},V:{x:0,y:0},A:{x:0,y:0},h:L+.8+22,vz:0,
      s:{x:0,y:0},sv:{x:0,y:0},T:{x:0,y:0},wind:{x:Math.sin(wa)*c.wind,y:Math.cos(wa)*c.wind},
      t:0,first:null,trail:[],tt:0,done:false,grounded:false,Lg:null,touches:0,toastT:0,dist0:dist};
+  P.k=S.cargo;P.Ht=P.k==='conc'?2.5:0;P.hl='085';
   P.Lc={x:P.H.x,y:P.H.y};P.ly=P.h-L;P.dist=dist;
   $('#gLv').textContent=`LV${lv} · ${c.name} · 吊り${L}m`;
   if(!enterGame('place'))return;
@@ -1025,16 +1052,34 @@ function stepPlace(dt){
     const lr=Math.abs(dx)>.38&&Math.abs(ux)>.38&&Math.sign(ux)!==Math.sign(dx);
     P.first=fa&&lr?'前後左右とも逆方向':fa?'前後が逆方向':lr?'左右が逆方向':(ux*dx+uy*dy>.5?'正しい方向':'ややズレた方向');
   }
-  coachWatch(dt,u,dist,P.ly-.8);
+  const conc=P.k==='conc';
+  if(conc&&!P.grounded){ // バケットが受けホッパーに当たらないようにする
+    const bot=P.ly-.8;
+    if(dist<2&&bot<P.Ht+.05){
+      if(!P.hit){P.hit=1;P.touches++;P.pour=null;P.hold=0;coach('hard',true);toast('バケットがホッパーに当たった。上げ直して')}
+      P.h+=P.Ht+.85-P.ly;P.ly=P.Ht+.85;P.vz=Math.max(P.vz,0);
+    }else if(bot>P.Ht+1.2||dist>2.6)P.hit=0;
+  }
+  coachWatch(dt,u,dist,P.ly-.8-P.Ht);
   // height callouts for the load
-  const lb=P.ly-.8;P.calls=P.calls||{};
+  const lb=P.ly-.8-P.Ht;P.calls=P.calls||{};
   for(const [th,txt,say] of CALLS){
     if(!P.grounded&&lb<=th&&lb>0&&!P.calls[th]&&P.vz<-.1){P.calls[th]=1;callout(txt,say)}
     if(lb>th+2)P.calls[th]=0;
   }
+  if(conc&&!P.grounded){
+    const bt=P.ly-.8-P.Ht,sw=Math.hypot(P.sv.x,P.sv.y);
+    if(!P.pour){
+      const ok=dist<1&&bt>.3&&bt<1.8&&sw<.5&&-P.vz<1&&lat<.9;
+      if(ok){P.hold=(P.hold||0)+dt;if(P.hold>1){P.pour={t:0,desc:Math.max(0,-P.vz),dist};callout('打設開始','打設開始')}}else P.hold=0;
+    }else{
+      if(dist<1.6&&bt>.1&&bt<2.4&&sw<.9){P.pour.t+=dt;if(P.pour.t>=2.6){P.Lc=Lc;P.dist=P.pour.dist;P.tdv=P.pour.desc;return endPlace()}}
+      else{P.pour=null;P.hold=0;P.touches++;coach('outside',true);toast('ずれた！打設中断。位置を合わせ直して')}
+    }
+  }
   if(!P.grounded&&P.ly<=.8){
     const desc=-P.vz;
-    if(dist<1.5&&desc<2&&lat<1.5){P.Lc=Lc;P.dist=dist;P.tdv=desc;return endPlace()}
+    if(!conc&&dist<1.5&&desc<2&&lat<1.5){P.Lc=Lc;P.dist=dist;P.tdv=desc;return endPlace()}
     P.tdv0=desc;
     P.grounded=true;P.touches++;P.Lg={x:Lc.x,y:Lc.y};P.ly=.8;
     coach(desc>=2?'hard':dist>=1.5?'outside':'swing',true);
@@ -1043,22 +1088,23 @@ function stepPlace(dt){
   if(P.grounded){
     if(P.h<P.LE){P.h=P.LE;P.vz=Math.max(P.vz,0)}
     // load resting inside the target (e.g. slid in on slack line): release after a short settle
-    if(dist<1.5){P.settle=(P.settle||0)+dt;if(P.settle>.8){P.Lc=Lc;P.dist=dist;P.tdv=P.tdv0||0;return endPlace()}}else P.settle=0;
+    if(!conc&&dist<1.5){P.settle=(P.settle||0)+dt;if(P.settle>.8){P.Lc=Lc;P.dist=dist;P.tdv=P.tdv0||0;return endPlace()}}else P.settle=0;
   }
   if(P.toastT>0){P.toastT-=dt;if(P.toastT<=0)$('#toast').hidden=true}
   P.tt+=dt;if(P.tt>.15){P.tt=0;P.trail.push([P.H.x,P.H.y,Lc.x,Lc.y])}
+  P.hl=conc?(P.pour?String(Math.round(150-135*Math.min(1,P.pour.t/2.6))).padStart(3,'0'):'150'):(P.k==='box'?'120':'085');
   P.Lc=Lc;P.dist=dist;
 }
 function endPlace(){
-  P.done=true;const t=P.t,key='p'+P.lv+'_'+P.L,isBest=best[key]==null||t<best[key];if(isBest){best[key]=t;store.set('best3',best)}
+  P.done=true;const t=P.t,key='p'+P.lv+'_'+P.L+(P.k==='conc'?'_conc':''),isBest=best[key]==null||t<best[key];if(isBest){best[key]=t;store.set('best3',best)}
   const good=P.first==='正しい方向';
   const cl=coachLine(P.dist<.8&&P.touches===0&&P.tdv<1.2?'success':'successMeh');
-  $('#scr-result').innerHTML=`<div><div class="eyebrow">Placement LV${P.lv} · ${P.c.name} · 吊り${P.L}m</div><div class="score">${t.toFixed(1)}<span style="font-size:22px">s</span></div>${isBest?'<p class="lead">自己ベスト更新</p>':''}</div>
+  $('#scr-result').innerHTML=`<div><div class="eyebrow">Placement LV${P.lv} · ${P.c.name} · ${CARGO[P.k].name} · 吊り${P.L}m</div><div class="score">${t.toFixed(1)}<span style="font-size:22px">s</span></div>${isBest?'<p class="lead">自己ベスト更新</p>':''}</div>
   <div class="stats">
    <div class="stat"><span class="k">近接時の初動</span><span class="val" style="font-size:14px;font-family:var(--f-body);color:${good?'var(--ok)':'var(--ng)'}">${P.first||'—'}</span></div>
-   <div class="stat"><span class="k">接地時のズレ</span><span class="val">${P.dist.toFixed(1)}m</span></div>
-   <div class="stat"><span class="k">接地速度</span><span class="val">${P.tdv.toFixed(1)}m/s</span></div>
-   <div class="stat"><span class="k">やり直し接地</span><span class="val">${P.touches}回</span></div>
+   <div class="stat"><span class="k">${P.k==='conc'?'打設位置のズレ':'接地時のズレ'}</span><span class="val">${P.dist.toFixed(1)}m</span></div>
+   <div class="stat"><span class="k">${P.k==='conc'?'降下速度':'接地速度'}</span><span class="val">${P.tdv.toFixed(1)}m/s</span></div>
+   <div class="stat"><span class="k">${P.k==='conc'?'やり直し':'やり直し接地'}</span><span class="val">${P.touches}回</span></div>
    <div class="stat"><span class="k">BEST</span><span class="val">${best[key].toFixed(1)}s</span></div>
    <div class="stat"><span class="k">開始距離</span><span class="val">${P.dist0.toFixed(0)}m</span></div>
   </div>
@@ -1116,7 +1162,7 @@ function loop(now){
       P.t+=dt;stepPlace(dt);
       if(P&&!P.done){
         $('#gT').textContent=P.t.toFixed(0)+'s';
-        render3D({H:P.H,h:P.h,L:P.Lc,ly:P.ly,grounded:P.grounded,vz:P.vz,pitch:-P.A.y*.012,roll:-P.A.x*.015},{labels:P.c.labels});
+        render3D({H:P.H,h:P.h,L:P.Lc,ly:P.ly,grounded:P.grounded,vz:P.vz,pitch:-P.A.y*.012,roll:-P.A.x*.015,cargo:P.k,pour:!!P.pour,hl:P.hl},{labels:P.c.labels});
       }
     }
   }
